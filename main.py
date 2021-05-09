@@ -1,11 +1,12 @@
 # pip install pytransloadit
-import os
-from transloadit import client
-import requests
-import boto3
 import json
+import os
 import time
 from signal import signal, SIGINT, SIGTERM
+
+import boto3
+import requests
+from transloadit import *
 
 # Change parameter backend endpoint
 def getBackendEndpoint():
