@@ -11,7 +11,6 @@ requests==2.25.1
 s3transfer==0.4.2
 six==1.16.0
 tinydb==4.4.0
-transloadit==1.0.1
+transloadit
 tuspy==0.2.4
 urllib3==1.26.4
-transloadit.client 
