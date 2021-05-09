@@ -1,7 +1,6 @@
 boto3
 requests
 pytransloadit
-signal
 json
 os
 time
