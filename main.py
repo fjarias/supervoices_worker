@@ -7,6 +7,7 @@ import json
 import time
 from signal import signal, SIGINT, SIGTERM
 
+
 # Change parameter backend endpoint
 def getBackendEndpoint():
     return 'http://3.142.39.92:7001/api/daemon/voices'
@@ -52,13 +53,10 @@ class SignalHandler:
 
 
 if __name__ == '__main__':
-    from transloadit import client
-    tl = client.Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
     sqs = boto3.client('sqs', region_name='us-east-1')
 
     signal_handler = SignalHandler()
     while not signal_handler.received_signal:
-        assembly = tl.new_assembly()
 
         response = sqs.receive_message(
             QueueUrl=getSqsUrl(),
@@ -67,7 +65,7 @@ if __name__ == '__main__':
         )
 
         # Check if messages in the queue
-        if not('Messages' in response):
+        if not ('Messages' in response):
             continue
 
         for i in range(len(response['Messages'])):
@@ -82,6 +80,12 @@ if __name__ == '__main__':
                 locutor_name = voice['locutor_name'] + ' ' + voice['locutor_lastname']
                 locutor_email = voice['locutor_email']
                 title = voice['title']
+
+                tl_key = os.environ['TL_KEY']
+                tl_secret = os.environ['TL_SECRET']
+
+                tl = client.Transloadit(tl_key, tl_secret)
+                assembly = tl.new_assembly()
 
                 # Conversion process
                 # Set Encoding Instructions
