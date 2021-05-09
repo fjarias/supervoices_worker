@@ -52,6 +52,7 @@ class SignalHandler:
 
 
 if __name__ == '__main__':
+    from transloadit import client
     tl = client.Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
     sqs = boto3.client('sqs', region_name='us-east-1')
 
