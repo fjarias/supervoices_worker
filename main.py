@@ -1,6 +1,6 @@
 # pip install pytransloadit
 import os
-from transloadit import *
+from transloadit import client
 import requests
 import boto3
 import json
