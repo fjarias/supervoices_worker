@@ -6,7 +6,7 @@ from signal import signal, SIGINT, SIGTERM
 
 import boto3
 import requests
-from transloadit import *
+from transloadit import client
 
 # Change parameter backend endpoint
 def getBackendEndpoint():
