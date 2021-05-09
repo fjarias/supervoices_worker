@@ -14,3 +14,4 @@ tinydb==4.4.0
 transloadit==1.0.1
 tuspy==0.2.4
 urllib3==1.26.4
+transloadit.client 
