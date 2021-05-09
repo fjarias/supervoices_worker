@@ -8,6 +8,7 @@ import boto3
 import requests
 from transloadit.client import Transloadit
 
+
 # Change parameter backend endpoint
 def getBackendEndpoint():
     return 'http://3.142.39.92:7001/api/daemon/voices'
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         )
 
         # Check if messages in the queue
-        if not('Messages' in response):
+        if not ('Messages' in response):
             continue
 
         for i in range(len(response['Messages'])):
