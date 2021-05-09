@@ -1,13 +1,11 @@
 # pip install pytransloadit
-import json
 import os
+from transloadit import client
+import requests
+import boto3
+import json
 import time
 from signal import signal, SIGINT, SIGTERM
-
-import boto3
-import requests
-from transloadit.client import Transloadit
-
 
 # Change parameter backend endpoint
 def getBackendEndpoint():
@@ -54,7 +52,7 @@ class SignalHandler:
 
 
 if __name__ == '__main__':
-    tl = Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
+    tl = client.Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
     sqs = boto3.client('sqs', region_name='us-east-1')
 
     signal_handler = SignalHandler()
@@ -68,7 +66,7 @@ if __name__ == '__main__':
         )
 
         # Check if messages in the queue
-        if not ('Messages' in response):
+        if not('Messages' in response):
             continue
 
         for i in range(len(response['Messages'])):
