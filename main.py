@@ -6,7 +6,7 @@ from signal import signal, SIGINT, SIGTERM
 
 import boto3
 import requests
-from transloadit import client
+from transloadit.client import Transloadit
 
 # Change parameter backend endpoint
 def getBackendEndpoint():
@@ -53,7 +53,7 @@ class SignalHandler:
 
 
 if __name__ == '__main__':
-    tl = client.Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
+    tl = Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
     sqs = boto3.client('sqs', region_name='us-east-1')
 
     signal_handler = SignalHandler()
