@@ -52,77 +52,78 @@ class SignalHandler:
         self.received_signal = True
 
 
-tl = Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
-sqs = boto3.client('sqs', region_name='us-east-1')
+if __name__ == '__main__':
+    tl = Transloadit(os.environ['TL_KEY'], os.environ['TL_SECRET'])
+    sqs = boto3.client('sqs', region_name='us-east-1')
 
-signal_handler = SignalHandler()
-while not signal_handler.received_signal:
-    assembly = tl.new_assembly()
+    signal_handler = SignalHandler()
+    while not signal_handler.received_signal:
+        assembly = tl.new_assembly()
 
-    response = sqs.receive_message(
-        QueueUrl=getSqsUrl(),
-        MaxNumberOfMessages=1,
-        WaitTimeSeconds=2
-    )
-
-    # Check if messages in the queue
-    if not('Messages' in response):
-        continue
-
-    for i in range(len(response['Messages'])):
-        start_time = time.time()
-        try:
-            receipt_handle = response['Messages'][i]['ReceiptHandle']
-            voice = json.loads(str(response['Messages'][i]['Body']))
-            voice_id = voice['id']
-            file_extension = voice['file_name'][len(voice['file_name']) - 4:len(voice['file_name'])]
-            file_name = str(voice_id) + file_extension
-            file_name_out = file_name[0:len(file_name) - 4] + '.mp3'
-            locutor_name = voice['locutor_name'] + ' ' + voice['locutor_lastname']
-            locutor_email = voice['locutor_email']
-            title = voice['title']
-
-            # Conversion process
-            # Set Encoding Instructions
-            assembly.add_step('import', '/s3/import', {
-                'path': 'voices_in/' + file_name,
-                'credentials': 'aws_credentials'
-            })
-            assembly.add_step('encode_mp3', '/audio/encode', {
-                'use': 'import',
-                'preset': 'mp3',
-                'ffmpeg_stack': 'v3.3.3'
-            })
-            assembly.add_step('export', '/s3/store', {
-                'use': [
-                    'encode_mp3'
-                ],
-                'path': 'voices_out/' + file_name,
-                'credentials': 'aws_credentials'
-            })
-
-            # Conversion by Transloadit
-            assembly_response = assembly.create(retries=5, wait=True)
-
-            # PUT command to set voice status in 'Converted'
-            mark_voice(file_name_out, voice_id, time.time() - start_time)
-        except Exception as e:
-            print(f"exception while processing message: {repr(e)}")
-            continue
-
-        # Delete SQS message
-        response = sqs.delete_message(
+        response = sqs.receive_message(
             QueueUrl=getSqsUrl(),
-            ReceiptHandle=receipt_handle
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=2
         )
 
-        # Send notification email
-        subject = 'SuperVoices: Tu voz ha sido procesada!'
-        url = getEmailingEndpoint()
-        my_query_string = {'mail_to': locutor_email,
-                           'mail_subject': subject,
-                           'recipient_name': locutor_name,
-                           'title': title
-                           }
-        r = requests.get(url, params=my_query_string)
-        print("se envió un email a " + locutor_email)
+        # Check if messages in the queue
+        if not('Messages' in response):
+            continue
+
+        for i in range(len(response['Messages'])):
+            start_time = time.time()
+            try:
+                receipt_handle = response['Messages'][i]['ReceiptHandle']
+                voice = json.loads(str(response['Messages'][i]['Body']))
+                voice_id = voice['id']
+                file_extension = voice['file_name'][len(voice['file_name']) - 4:len(voice['file_name'])]
+                file_name = str(voice_id) + file_extension
+                file_name_out = file_name[0:len(file_name) - 4] + '.mp3'
+                locutor_name = voice['locutor_name'] + ' ' + voice['locutor_lastname']
+                locutor_email = voice['locutor_email']
+                title = voice['title']
+
+                # Conversion process
+                # Set Encoding Instructions
+                assembly.add_step('import', '/s3/import', {
+                    'path': 'voices_in/' + file_name,
+                    'credentials': 'aws_credentials'
+                })
+                assembly.add_step('encode_mp3', '/audio/encode', {
+                    'use': 'import',
+                    'preset': 'mp3',
+                    'ffmpeg_stack': 'v3.3.3'
+                })
+                assembly.add_step('export', '/s3/store', {
+                    'use': [
+                        'encode_mp3'
+                    ],
+                    'path': 'voices_out/' + file_name,
+                    'credentials': 'aws_credentials'
+                })
+
+                # Conversion by Transloadit
+                assembly_response = assembly.create(retries=5, wait=True)
+
+                # PUT command to set voice status in 'Converted'
+                mark_voice(file_name_out, voice_id, time.time() - start_time)
+            except Exception as e:
+                print(f"exception while processing message: {repr(e)}")
+                continue
+
+            # Delete SQS message
+            response = sqs.delete_message(
+                QueueUrl=getSqsUrl(),
+                ReceiptHandle=receipt_handle
+            )
+
+            # Send notification email
+            subject = 'SuperVoices: Tu voz ha sido procesada!'
+            url = getEmailingEndpoint()
+            my_query_string = {'mail_to': locutor_email,
+                               'mail_subject': subject,
+                               'recipient_name': locutor_name,
+                               'title': title
+                               }
+            r = requests.get(url, params=my_query_string)
+            print("se envió un email a " + locutor_email)
